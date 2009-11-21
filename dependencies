@@ -1,0 +1,8 @@
+cl-interpol cl-unicode flexi-streams
+chimi iterate cl-interpol log5 cl-ppcre alexandria cffi cl-fad babel
+nurarihyon chimi
+nurikabe chimi cl-vectors iterate cffi clyax nurarihyon alexandria zpb-ttf
+komainu chimi nurarihyon nurikabe iterate alexandria
+yasha chimi usocket flexi-streams
+tengu chimi iterate
+clyax cffi chimi
