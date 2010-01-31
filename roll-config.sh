@@ -57,44 +57,53 @@ roll_genrc_zsh
 roll_genrc_csh() {
 cat <<EOF
 setenv ROLL_ROOT $PREFIX_PATH
+setenv ROLL_LISP
 EOF
 }
 
 roll_genrc_zsh() {
 cat <<EOF
 export ROLL_ROOT=$PREFIX_PATH
+export ROLL_LISP=
 EOF
 }
 
 roll_check() {
 if [ `check_sbcl` -o `check_acl` -o "$ROLL_LISP" != "" ] ; then
-    if [ $VERBOSE = true ] ; then
-	echo Lisp OK
-    fi
+    echo Lisp OK
 else
-    if [ $VERBOSE = true ] ; then
-	echo Lisp NG
-    fi
+    echo Lisp NG
     return 1
 fi
 
 if [ `check_clbuild` ] ; then
-    if [ $VERBOSE = true ] ; then
-	echo clbuild OK
-    fi
+    echo clbuild OK
 else
-    if [ $VERBOSE = true ] ; then
-	echo clbuild NG
-    fi
+    echo clbuild NG
     return 2
 fi
 
-return 1
+if [ `check_env` ] ; then
+    echo environmental variable OK
+else
+    echo environmental variable NG
+    return 3
+fi
+
+return 0
+}
+
+check_env() {
+    if [ "${ROLL_ROOT}" != "" ] ; then
+	return 0
+    else
+	return 1
+    fi
 }
 
 roll_bootstrap() {
-echo "hoge"
-return 1
+    echo "hoge"
+    return 1
 }
 
 # main
@@ -114,7 +123,9 @@ do
 	"v" ) VERBOSE=true;;
     esac
 done
+
 shift `expr $OPTIND - 1`
+
 for i in $COMMANDS
 do
     if [ "$i" = "$ROLL_COMMAND" ] ; then
