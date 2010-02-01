@@ -32,6 +32,14 @@ check_clbuild() {
     which clbuild
 }
 
+check_env() {
+    if [ "${ROLL_ROOT}" != "" ] ; then
+	echo OK
+    else
+	echo NG
+    fi
+}
+
 debug_echo() {
     if [ "$VERBOSE" = "true" ] ; then
 	echo "[DEBUG] " $@
@@ -58,6 +66,7 @@ roll_genrc_csh() {
 cat <<EOF
 setenv ROLL_ROOT $PREFIX_PATH
 setenv ROLL_LISP
+setenv ROLL_GITHUB_COMMITTER
 EOF
 }
 
@@ -65,6 +74,7 @@ roll_genrc_zsh() {
 cat <<EOF
 export ROLL_ROOT=$PREFIX_PATH
 export ROLL_LISP=
+export ROLL_GITHUB_COMMITTER=
 EOF
 }
 
@@ -83,7 +93,7 @@ else
     return 2
 fi
 
-if [ `check_env` ] ; then
+if [ "`check_env`" = "OK" ] ; then
     echo environmental variable OK
 else
     echo environmental variable NG
@@ -93,17 +103,37 @@ fi
 return 0
 }
 
-check_env() {
-    if [ "${ROLL_ROOT}" != "" ] ; then
-	return 0
-    else
-	return 1
+roll_clbuild_setup() {
+    # setup dependencies
+    if [ "`grep -c \"ROLL CONFIG\" $CLBUILD_DIR/dependencies`" = "0" ] ; then
+	echo now setting dependencies of clbuild
+	echo "# ROLL CONFIG" >> $CLBUILD_DIR/dependencies
+	cat ./dependencies >> $CLBUILD_DIR/dependencies
+    fi
+    # setup my-projects
+    touch $CLBUILD_DIR/my-projects
+    if [ "`grep -c \"ROLL CONFIG\" $CLBUILD_DIR/my-projects`" = "0" ] ; then
+	echo now setting my-projects of clbuild
+	echo "# ROLL CONFIG" >> $CLBUILD_DIR/my-projects
+	if [ "$ROLL_GITHUB_COMMITTER" = "yes" ] ; then
+	    cat ./my-projects-committer >> $CLBUILD_DIR/my-projects
+	else
+	    cat ./my-projects >> $CLBUILD_DIR/my-projects
+	fi
     fi
 }
 
+roll_clbuild_install() {
+    clbuild install chimi nurarihyon nurikabe komainu yasha tengu clyax
+}
+
 roll_bootstrap() {
-    echo "hoge"
-    return 1
+    CLBUILD_PATH=`which clbuild`
+    CLBUILD_DIR=`dirname $CLBUILD_PATH`
+    debug_echo CLBUILD_DIR is $CLBUILD_DIR
+    roll_clbuild_setup
+    roll_clbuild_install
+    return 0
 }
 
 # main

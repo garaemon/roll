@@ -1,0 +1,11 @@
+lisp-unit get_git git://repo.or.cz/lisp-unit.git
+cl-interpol get_ediware
+
+chimi get_git git@github.com:garaemon/chimi.git
+nurarihyon get_git git@github.com:garaemon/nurarihyon.git
+nurikabe get_git git@github.com:garaemon/nurikabe.git
+komainu get_git git@github.com:garaemon/komainu.git
+yasha get_git git@github.com:garaemon/yasha.git
+tengu get_git git@github.com:garaemon/tengu.git
+clyax get_git git@github.com:garaemon/clyax.git
+
