@@ -4,13 +4,14 @@ COMMANDS="bootstrap clean-fasl check genrc install_sbcl install_clbuild help"
 VERBOSE=false
 # constants
 SBCL_URL=:pserver:anonymous@sbcl.cvs.sourceforge.net:/cvsroot/sbcl
-
+ROLL_PACKAGES="chimi nurarihyon nurikabe komainu yasha tengu clyax"
 usage() {
 echo "usage: roll-config.sh COMMAND PARAMS
 
 currently supported commands:
 
   roll-config.sh bootstrap [-v]
+  roll-config.sh uninstall [-v]
   roll-config.sh clean-fasl [-v]
   roll-config.sh check [-v]
   roll-config.sh genrc [-v] SHELL PREFIX_PATH
@@ -106,6 +107,23 @@ fi
 return 0
 }
 
+roll_uninstall() {
+    CLBUILD_PATH=`which clbuild`
+    CLBUILD_DIR=`dirname $CLBUILD_PATH`
+    debug_echo remove clbuild sources...
+    for i in $ROLL_PACKAGES
+    do
+	clbuild uninstall $i
+    done
+
+    debug_echo remove symlink to ROLL_ROOT
+    cd $ROLL_ROOT
+    for i in $ROLL_PACKAGES
+    do
+	rm -f $i
+    done
+}
+
 roll_clbuild_setup() {
     # setup dependencies
     if [ "`grep -c \"ROLL CONFIG\" $CLBUILD_DIR/dependencies`" = "0" ] ; then
@@ -130,13 +148,32 @@ roll_clbuild_install() {
     clbuild install chimi nurarihyon nurikabe komainu yasha tengu clyax
 }
 
+roll_symlink-setup() {
+    cd $ROLL_ROOT
+    for i in $ROLL_PACKAGES
+    do
+	ln -sf CLBUILD_DIR/source/$i .
+    done
+}
+
 roll_bootstrap() {
     CLBUILD_PATH=`which clbuild`
     CLBUILD_DIR=`dirname $CLBUILD_PATH`
     debug_echo CLBUILD_DIR is $CLBUILD_DIR
     roll_clbuild_setup
     roll_clbuild_install
+    roll_symlink_setup
     return 0
+}
+
+roll_clean_fasl() {
+    CLBUILD_PATH=`which clbuild`
+    CLBUILD_DIR=`dirname $CLBUILD_PATH`
+    cd $CLBUILD_DIR/source
+    for i in $ROLL_PACKAGES
+    do
+	find -L $i -name "*fasl" -print -exec rm -f {} \;
+    done
 }
 
 roll_install_clbuild() {
@@ -188,7 +225,7 @@ EOF
    debug_echo "now compiling sbcl..."
    sh make.sh "./sbclcompr"
    debug_echo "now installing sbcl..."
-   sudo sh install.sh 
+   sudo sh install.sh
 }
 
 # main
