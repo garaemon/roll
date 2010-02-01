@@ -1,18 +1,21 @@
 #!/bin/sh
 
-COMMANDS="bootstrap clean-fasl check genrc help"
+COMMANDS="bootstrap clean-fasl check genrc install_sbcl install_clbuild help"
 VERBOSE=false
-
+# constants
+SBCL_URL=:pserver:anonymous@sbcl.cvs.sourceforge.net:/cvsroot/sbcl
 
 usage() {
 echo "usage: roll-config.sh COMMAND PARAMS
 
 currently supported commands:
 
-  roll-config.sh bootstrap [-v] PATH
-  roll-config.sh clean-fasl [-v] PATH
+  roll-config.sh bootstrap [-v]
+  roll-config.sh clean-fasl [-v]
   roll-config.sh check [-v]
   roll-config.sh genrc [-v] SHELL PREFIX_PATH
+  roll-config.sh install_sbcl [-v] PREFIX_PATH
+  roll-config.sh install_clbuild [-v] PREFIX_PATH
   roll-config.sh help
   
   Options:
@@ -134,6 +137,58 @@ roll_bootstrap() {
     roll_clbuild_setup
     roll_clbuild_install
     return 0
+}
+
+roll_install_clbuild() {
+    TARGET_PATH=$1
+    TMP=`pwd`
+    cd $TARGET_PATH
+    if [ ! -e clbuild ] ; then
+	debug_echo "now installing clbuild"
+	darcs get http://common-lisp.net/project/clbuild/clbuild
+    fi
+    cd $TMP
+}
+
+roll_install_sbcl() {
+    CURRENT_SBCL=`which sbcl`
+    if [ "$CURRENT_SBCL" = "" ] ; then
+	echo "you need to install sbcl binary first..."
+	return 1
+    fi
+    CURRENT_SBCL_DIR=`dirname $CURRENT_SBCL`
+    TARGET_PATH=$1
+    TMP=`pwd`
+    cd $TARGET_PATH
+    if [ ! -e sbcl ] ; then
+	debug_echo "checking out sbcl..."
+	cvs -d $SBCL_URL co sbcl
+	cd sbcl
+    else
+	debug_echo "updating sbcl..."
+	cd sbcl;
+	cvs up
+    fi
+    cat > customize-target-features.lisp <<EOF
+(lambda (features)
+      (flet ((enable (x)
+               (pushnew x features))
+             (disable (x)
+               (setf features (remove x features))))
+        ;; Threading support, available only on x86/x86-64 Linux, x86 Solaris
+        ;; and x86 Mac OS X (experimental).
+        (enable :sb-thread)))
+EOF
+    cat > sbclcompr <<EOF
+SBCL_HOME=`dirname $CURRENT_SBCL_DIR`/lib/sbcl $CURRENT_SBCL \$*
+EOF
+   chmod +x sbclcompr
+   debug_echo "now cleaning sbcl..."
+   sh clean.sh
+   debug_echo "now compiling sbcl..."
+   sh make.sh "./sbclcompr"
+   debug_echo "now installing sbcl..."
+   sudo sh install.sh 
 }
 
 # main
