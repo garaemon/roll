@@ -148,7 +148,7 @@ roll_clbuild_install() {
     clbuild install chimi nurarihyon nurikabe komainu yasha tengu clyax
 }
 
-roll_symlink-setup() {
+roll_symlink_setup() {
     cd $ROLL_ROOT
     for i in $ROLL_PACKAGES
     do
